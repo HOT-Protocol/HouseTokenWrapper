@@ -7,14 +7,14 @@
 const hre = require("hardhat");
 
 async function main() {
-  const SpellRegistry = await hre.ethers.getContractFactory("SpellRegistry");
+  const SpellRegist = await hre.ethers.getContractFactory("SpellRegist");
   const HouseToken = await hre.ethers.getContractFactory("HouseToken");
   const HouseTokenFactory = await hre.ethers.getContractFactory("HouseTokenFactory");
 
   console.log("\nDeploy Contract ...")
   const ht = await HouseToken.deploy();
   const factory = await HouseTokenFactory.deploy(ht.address).then();
-  const spr = await SpellRegistry.deploy([]);
+  const spr = await SpellRegist.deploy(0,[]);
 
   console.log(
     `all contracts was deployed successfully ...
