@@ -25,6 +25,11 @@ async function main() {
 
   console.log("\n\n set contracts ... \n");
   await ht.setMinter(factory.address).then(log => console);
+
+  console.log("\n\n verify contracts ... \n");
+  await hre.run("verify:verify", {address: ht.address}).then(log => console);
+  await hre.run("verify:verify", {address: factory.address}).then(log => console);
+  await hre.run("verify:verify", {address: spr.address}).then(log => console);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
