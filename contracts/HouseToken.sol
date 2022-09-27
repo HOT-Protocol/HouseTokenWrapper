@@ -77,8 +77,8 @@ contract HouseToken is Ownable, ERC721URIStorage{
         : "";
     }
 
-    function setFactory(address _minter) public onlyOwner{
-        require(_minter != address(0), "HouseToken: manter can't be zero address");
+    function setMinter(address _minter) public onlyOwner{
+        require(_minter != address(0), "HouseToken: minter can't be zero address");
         minter = _minter;
     }
 
