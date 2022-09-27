@@ -67,7 +67,7 @@ contract HouseTokenFactory is Ownable {
     }
 
     function wrapper(address nft, uint256 tokenId, address owner) public auth {
-        require(IERC721Metadata(nft).ownerOf(tokenId) != owner, "HouseTokenFactory: error token");
+        require(IERC721Metadata(nft).ownerOf(tokenId) == owner, "HouseTokenFactory: token ownership errors");
 
         HouseTokenWrapper wrap = new HouseTokenWrapper(
                 erc721,
