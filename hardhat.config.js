@@ -14,14 +14,11 @@ module.exports = {
       }
     }
   },
+  defaultNetwork: "goerli",
   networks: {
-    main: {
-      url: "https://main.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-      accounts: []
-    },
     goerli: {
       url: "https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-      accounts: []
+      accounts: [""]
     }
   },
   etherscan: {

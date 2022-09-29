@@ -13,22 +13,38 @@ contract Vote {
         address sender;
         uint256 expire;
         string desc;
-       // address[] approvers; 
     }
     
+    enum Status {VOTING, PASSED, NOPASS}
     uint256 public lastId;                                              //last of proposals Id
     uint256 public line;                                                //line of proposals passed
+    uint256 public indate;                                              //proposal indate
     mapping (uint256=> proposalMsg) public pom;                         //proposal MSG  
     mapping (uint256=> address[]) public poa;                           //proposal approves
     mapping (address=> uint256) public sopi;                            //spell of proposal's id
     mapping (uint256=> bool) public popi;                               //passed of proposal's id
  
-    event SendProposal(uint256 indexed id, address indexed  usr, address spell, string desc);
+    event SendProposal(uint256 indexed id, address indexed usr, address spell, string desc);
     event VoteProposal(uint256 indexed id, address indexed usr);
     
+    function getProposalMSG(uint256 id) public view returns(address spell, address sender, string memory desc, uint256 expire, Status status){
+        proposalMsg memory pm = pom[id];
+        (spell, sender, desc, expire) = (pm.sender, pm.sender, pm.desc, pm.expire);
+        if (popi[id]){
+            status = Status.PASSED;
+        }else {
+            status = pm.expire > block.timestamp ? Status.VOTING : Status.NOPASS;
+        }
+    }
+
     function _setLine(uint256 _line) internal {
         require(_line >0, "Error Line");
         line = _line;
+    }
+
+    function _setIndate(uint256 _indate) internal {
+        require(_indate > 1 && _indate < 31 , "Error indate");
+        indate = _indate * 1 days;
     }
 
     function _sendProposal(address _spell, string memory _desc) internal {
@@ -38,7 +54,7 @@ contract Vote {
             lastId,
             _spell,
             msg.sender,
-            block.timestamp + 1 days,
+            block.timestamp + indate,
             _desc
         );
 
@@ -82,23 +98,26 @@ contract Auth{
 
 contract SpellRegist is IRegist, Ownable, Vote, Auth{
     bool public pause;
-    address public authFactory;
+    address public authORG;
     mapping(address=>bool) internal authSpells;
     event Regist(address spell);
 
-    constructor(uint256 _line, address[] memory _signers){
-        line = _line;
+    constructor(uint256 _line, uint256 _indate, address[] memory _signers){
+        _setLine(_line);
+        _setIndate(_indate);
         for(uint256 i=0; i< _signers.length; i++){
             _rely(_signers[i]);
         }
     }
+
     function setPause(bool flag) public onlyOwner { pause = flag;}
     function rely(address usr) public onlyOwner { _rely(usr);}
     function deny(address usr) public onlyOwner { _deny(usr);}
-    function setLine(uint256 l) public onlyOwner {_setLine(l);}
-    function setAuthFactory(address factory) public onlyOwner{
-        require(factory != address(0), "factory can't be 0");
-        authFactory = factory;
+    function setLine(uint256 vaule) public onlyOwner {_setLine(vaule);}
+    function setIndate(uint256 vaule) public onlyOwner {_setIndate(vaule);}
+    function setAuthORG(address org) public onlyOwner{
+        require(org != address(0), "org can't be 0");
+        authORG = org;
     }
 
     function sendProposal(address spell, string memory desc) public auth {
@@ -122,7 +141,7 @@ contract SpellRegist is IRegist, Ownable, Vote, Auth{
         if (!pause){
              return authSpells[spell];
         }else {
-             return IRegist(authFactory).isAuthSpell(spell);
+             return IRegist(authORG).isAuthSpell(spell);
         }
     }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
-contract HouseTokenWrapper {
+contract HouseWrap {
     address                                         public holder;
     uint256                                         public constant totalSupply = 1;
     mapping(address => mapping(address => uint256)) public allowance;
