@@ -4,7 +4,12 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
+interface Iwrapper {
+    function changeHolder(address nft, uint256 id, address usr) external;
+}
+
 contract HouseWrap {
+    address                                         public wrapper;
     address                                         public holder;
     uint256                                         public constant totalSupply = 1;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -15,10 +20,12 @@ contract HouseWrap {
     uint256                                         public immutable tokenId;
 
     constructor(
+        address w,
         IERC721Metadata t,
         uint256 id,
         string memory tokenSymbol
     ) {
+        wrapper = w;
         erc721 = t;
         tokenId = id;
         symbol = tokenSymbol;
@@ -63,9 +70,9 @@ contract HouseWrap {
         }
 
         holder = recipient;
+        Iwrapper(wrapper).changeHolder(address(erc721), tokenId, recipient);
 
         emit Transfer(sender, recipient, amount);
-
         return true;
     }
 
@@ -75,12 +82,14 @@ contract HouseWrap {
 
         erc721.transferFrom(address(this), holder, tokenId);
         holder = address(0);
+        Iwrapper(wrapper).changeHolder(address(erc721), tokenId, address(0));
         emit Transfer(holder, address(0), totalSupply);
     }
 
     function deposit() public {
         erc721.transferFrom(msg.sender, address(this), tokenId);
         holder = msg.sender;
+        Iwrapper(wrapper).changeHolder(address(erc721), tokenId, msg.sender);
         emit Transfer(address(0), holder, totalSupply);
     }
 

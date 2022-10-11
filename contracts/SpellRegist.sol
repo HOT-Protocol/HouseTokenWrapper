@@ -27,9 +27,9 @@ contract Vote {
     event SendProposal(uint256 indexed id, address indexed usr, address spell, string desc);
     event VoteProposal(uint256 indexed id, address indexed usr);
     
-    function getProposalMSG(uint256 id) public view returns(address spell, address sender, string memory desc, uint256 expire, Status status){
+    function getProposalMSG(uint256 id) public view returns(address spell, address sender, string memory desc, uint256 expire, Status status, address[] memory approveds){
         proposalMsg memory pm = pom[id];
-        (spell, sender, desc, expire) = (pm.sender, pm.sender, pm.desc, pm.expire);
+        (spell, sender, desc, expire, approveds) = (pm.spell, pm.sender, pm.desc, pm.expire, poa[id]);
         if (popi[id]){
             status = Status.PASSED;
         }else {
@@ -43,7 +43,7 @@ contract Vote {
     }
 
     function _setIndate(uint256 _indate) internal {
-        require(_indate > 1 && _indate < 31 , "Error indate");
+        require(_indate >= 1 && _indate <= 31 , "Error indate");
         indate = _indate * 1 days;
     }
 
@@ -64,7 +64,7 @@ contract Vote {
         emit SendProposal(lastId, msg.sender, _spell, _desc);
     }
 
-    function _isApproved(address usr, uint256 id) internal view returns(bool) {
+    function isApproved(address usr, uint256 id) public view returns(bool) {
         if (poa[id].length == 0){ return false;}
         for (uint256 i=0; i < poa[id].length; i++){
             if(poa[id][i] == usr) {return true;}
@@ -74,7 +74,7 @@ contract Vote {
 
     function _vote(uint256 id) internal {
         require(pom[id].expire > block.timestamp, "proposal exprired");
-        require(!_isApproved(msg.sender, id), "caller was approverd");
+        require(!isApproved(msg.sender, id), "caller was approverd");
 
         poa[id].push(msg.sender);
         if (poa[id].length == line){

@@ -14,9 +14,10 @@ interface houseToken is IERC721Metadata{
 contract HouseWrapper is Ownable {
     using Strings for uint256;
     
-    houseToken public immutable erc721;
+    houseToken public  erc721;
     mapping(address => mapping(uint256=>address)) public wrapOf;
     event Wrapper(address nft, uint256 tokenId, address wrap, address owner);
+    event ChangeHolder(address wrap, address holder);
 
     // --- Auth ---
     mapping (address => uint256) public wards;
@@ -27,16 +28,27 @@ contract HouseWrapper is Ownable {
         _;
     }
 
-    constructor(address _houseToken){
-        erc721 = houseToken(_houseToken);
+    function changeHolder(address nft, uint256 id, address usr) public {
+        require(msg.sender == wrapOf[nft][id], "HouseWrapper: only HouseTokenWrap");
+        emit ChangeHolder(msg.sender, usr);
+    }
+
+    function getWrapHolder(address wrap) public view returns(address) {
+        return HouseWrap(wrap).holder();
+    }
+
+    function setHouseToken(address token) public onlyOwner {
+        erc721 = houseToken(token);
     }
 
     function mint(address to) public auth returns (uint256, HouseWrap) {
-        require(to != address(0), "HouseTokenFactory: zero address");
+        require(address(erc721)!= address(0), "HouseWrapper: set HouseToken");
+        require(to != address(0), "HouseWrapper: zero address");
 
         uint256 newTokenId = erc721.mint(to);
 
         HouseWrap wrap = new HouseWrap(
+            address(this),
             erc721,
             newTokenId,
             string(abi.encodePacked(erc721.symbol(), newTokenId.toString()))
@@ -50,11 +62,13 @@ contract HouseWrapper is Ownable {
     }
 
     function mint(address to, uint256 mintAmount) public onlyOwner{
-        require(to != address(0), "HouseTokenFactory: zero address");
+        require(address(erc721)!= address(0), "HouseWrapper: set HouseToken");
+        require(to != address(0), "HouseWrapper: zero address");
         for(uint256 i=0; i< mintAmount; i++){
             uint256 newTokenId = erc721.mint(to);
 
             HouseWrap wrap = new HouseWrap(
+                address(this),
                 erc721,
                 newTokenId,
                 string(abi.encodePacked(erc721.symbol(), "_", newTokenId.toString()))
@@ -67,9 +81,10 @@ contract HouseWrapper is Ownable {
     }
 
     function wrapper(address nft, uint256 tokenId, address owner) public auth {
-        require(IERC721Metadata(nft).ownerOf(tokenId) == owner, "HouseTokenFactory: token ownership errors");
+        require(IERC721Metadata(nft).ownerOf(tokenId) == owner, "HouseWrapper: token ownership errors");
 
         HouseWrap wrap = new HouseWrap(
+                address(this),
                 erc721,
                 tokenId,
                 string(abi.encodePacked(erc721.symbol(), "_", tokenId.toString()))
